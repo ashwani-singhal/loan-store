@@ -12,6 +12,10 @@ public class LoanService {
     @Autowired
     private LoanRepository repository;
 
+    public LoanService(LoanRepository loanRepository) {
+        repository = loanRepository;
+    }
+
 
     public Loan saveLoan(Loan loan)
     {
