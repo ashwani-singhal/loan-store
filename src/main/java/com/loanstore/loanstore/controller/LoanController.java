@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class LoanController {
@@ -45,34 +48,67 @@ public class LoanController {
 
     @GetMapping("/aggregate/lender")
     public ResponseEntity<LoanAggregate> getAggregateLoansByLender() {
-        // Implement aggregation logic here
-        return ResponseEntity.ok(new LoanAggregate());
+        Map<String, LoanAggregate> aggregates = new HashMap<>();
+
+        for (Loan loan : loanStore) {
+            String lenderId = loan.getLenderId();
+            LoanAggregate aggregate = aggregates.getOrDefault(lenderId, new LoanAggregate());
+
+            aggregate.setRemainingAmount(aggregate.getRemainingAmount() + loan.getRemainingAmount());
+            aggregate.setInterest(aggregate.getInterest() + calculateInterest(loan));
+            aggregate.setPenalty(aggregate.getPenalty() + calculatePenalty(loan));
+
+            aggregates.put(lenderId, aggregate);
+        }
+
+        return ResponseEntity.ok(aggregates.values().stream().collect(Collectors.toList()));
     }
 
     @GetMapping("/aggregate/customer")
     public ResponseEntity<LoanAggregate> getAggregateLoansByCustomer() {
-        // Implement aggregation logic here
-        return ResponseEntity.ok(new LoanAggregate());
+        Map<String, LoanAggregate> aggregates = new HashMap<>();
+
+        for (Loan loan : loanStore) {
+            String customerId = loan.getCustomerId();
+            LoanAggregate aggregate = aggregates.getOrDefault(customerId, new LoanAggregate());
+
+            aggregate.setRemainingAmount(aggregate.getRemainingAmount() + loan.getRemainingAmount());
+            aggregate.setInterest(aggregate.getInterest() + calculateInterest(loan));
+            aggregate.setPenalty(aggregate.getPenalty() + calculatePenalty(loan));
+
+            aggregates.put(customerId, aggregate);
+        }
+
+        return ResponseEntity.ok(aggregates.values().stream().collect(Collectors.toList()));
     }
 
     @GetMapping("/aggregate/interest")
     public ResponseEntity<LoanAggregate> getAggregateLoansByInterest() {
-        // Implement aggregation logic here
-        return ResponseEntity.ok(new LoanAggregate());
-    }
+        Map<Double, LoanAggregate> aggregates = new HashMap<>();
 
-    private void validateLoan(Loan loan) {
-        // Implement validation logic here
-        if (loan.getPaymentDate().isAfter(loan.getDueDate())) {
-            throw new IllegalArgumentException("Payment date cannot be greater than the due date.");
+        for (Loan loan : loanStore) {
+            double interestRate = loan.getInterestPerDay();
+            LoanAggregate aggregate = aggregates.getOrDefault(interestRate, new LoanAggregate());
+
+            aggregate.setRemainingAmount(aggregate.getRemainingAmount() + loan.getRemainingAmount());
+            aggregate.setInterest(aggregate.getInterest() + calculateInterest(loan));
+            aggregate.setPenalty(aggregate.getPenalty() + calculatePenalty(loan));
+
+            aggregates.put(interestRate, aggregate);
         }
+
+        return ResponseEntity.ok(aggregates.values().stream().collect(Collectors.toList()));
     }
 
-    private Loan findLoanById(String loanId) {
-        return loanStore.stream()
-                .filter(loan -> loan.getLoanId().equals(loanId))
-                .findFirst()
-                .orElse(null);
+    private double calculateInterest(Loan loan) {
+
+        return 0.0;
     }
+
+    private double calculatePenalty(Loan loan) {
+
+        return 0.0;
+    }
+
 }
 }
